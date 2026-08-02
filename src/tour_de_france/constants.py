@@ -1,0 +1,38 @@
+"""Shared constants for the Tour De France game UI."""
+
+APP_NAME = "Tour De France"
+WINDOW_MIN_WIDTH = 1100
+WINDOW_MIN_HEIGHT = 720
+LOGO_RELATIVE_PATH = "assets/logo.png"
+
+DEFAULT_TEAM_COUNT = 4
+MIN_TEAM_COUNT = 2
+MAX_TEAM_COUNT = 12
+
+DEFAULT_SHORT_STAGES = 3
+DEFAULT_MEDIUM_STAGES = 2
+DEFAULT_LONG_STAGES = 1
+
+MAX_STAGES_PER_CATEGORY = 30
+
+SHORT_STAGE_RANGE = (10, 60)
+MEDIUM_STAGE_RANGE = (60, 150)
+LONG_STAGE_RANGE = (150, 300)
+
+GREEN_PRIMARY = "#2ea043"
+GREEN_PRIMARY_HOVER = "#3fb950"
+
+DEFAULT_TEAM_COLORS = [
+    "#e63946",
+    "#457b9d",
+    "#2a9d8f",
+    "#f4a261",
+    "#6a4c93",
+    "#ef476f",
+    "#118ab2",
+    "#8338ec",
+    "#ff006e",
+    "#8ac926",
+    "#ffbe0b",
+    "#264653",
+]

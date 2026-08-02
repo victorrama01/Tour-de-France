@@ -1,0 +1,60 @@
+name: Build Desktop Apps
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Windows EXE
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: .\build_windows.ps1
+
+      - name: Build macOS APP
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          chmod +x build_mac.sh
+          ./build_mac.sh
+
+      - name: Upload Windows artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: TourDeFrance-windows-exe
+          path: dist/TourDeFrance.exe
+          if-no-files-found: error
+
+      - name: Upload macOS artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: TourDeFrance-macos-app
+          path: dist/TourDeFrance.app
+          if-no-files-found: error
