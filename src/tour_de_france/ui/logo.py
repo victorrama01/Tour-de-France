@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, Qt
@@ -12,14 +13,32 @@ from tour_de_france.constants import LOGO_RELATIVE_PATH
 
 def _resolve_custom_logo_path() -> Path | None:
     """Find a user-provided logo file if available."""
-    project_root = Path(__file__).resolve().parents[3]
-    candidates = [
-        project_root / LOGO_RELATIVE_PATH,
-        project_root / "logo.png",
-    ]
-    for candidate in candidates:
-        if candidate.exists() and candidate.is_file():
-            return candidate
+    roots: list[Path] = []
+
+    # PyInstaller onefile/onedir extraction root.
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        roots.append(Path(meipass))
+
+    # Folder containing executable when bundled.
+    roots.append(Path(sys.executable).resolve().parent)
+
+    # Current working directory and source-project root.
+    roots.append(Path.cwd())
+    roots.append(Path(__file__).resolve().parents[3])
+
+    seen: set[Path] = set()
+    for root in roots:
+        if root in seen:
+            continue
+        seen.add(root)
+        candidates = [
+            root / LOGO_RELATIVE_PATH,
+            root / "logo.png",
+        ]
+        for candidate in candidates:
+            if candidate.exists() and candidate.is_file():
+                return candidate
     return None
 
 

@@ -31,11 +31,11 @@ CMD=(
   --paths src
 )
 
-if [[ -f "assets/logo.png" ]]; then
-  echo "Including logo file: assets/logo.png"
-  CMD+=(--add-data "assets/logo.png:assets")
+if [[ -d "assets" ]]; then
+  echo "Including assets directory: assets/"
+  CMD+=(--add-data "assets:assets")
 else
-  echo "No assets/logo.png found. Build will use fallback logo."
+  echo "No assets/ directory found. Build will use fallback logo."
 fi
 
 CMD+=("$ENTRY")

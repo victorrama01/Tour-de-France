@@ -19,12 +19,12 @@ if (-not (Test-Path $entry)) {
     throw "Could not find entrypoint: $entry"
 }
 
-$logoArg = $null
-if (Test-Path "assets/logo.png") {
-    $logoArg = "--add-data `"assets/logo.png;assets`""
-    Write-Host "Including logo file: assets/logo.png" -ForegroundColor Green
+$assetsArg = $null
+if (Test-Path "assets") {
+    $assetsArg = "--add-data `"assets;assets`""
+    Write-Host "Including assets directory: assets/" -ForegroundColor Green
 } else {
-    Write-Host "No assets/logo.png found. Build will use fallback logo." -ForegroundColor Yellow
+    Write-Host "No assets/ directory found. Build will use fallback logo." -ForegroundColor Yellow
 }
 
 $bundleArg = if ($OneDir) { "--onedir" } else { "--onefile" }
@@ -38,8 +38,8 @@ $cmd = @(
     "--paths src"
 )
 
-if ($logoArg) {
-    $cmd += $logoArg
+if ($assetsArg) {
+    $cmd += $assetsArg
 }
 
 $cmd += $entry
