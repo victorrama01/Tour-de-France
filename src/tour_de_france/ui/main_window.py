@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QMainWindow, QMessageBox, QStackedWidget
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QMainWindow,
+    QMessageBox,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from tour_de_france.constants import APP_NAME, WINDOW_MIN_HEIGHT, WINDOW_MIN_WIDTH
 from tour_de_france.models.game_config import GameConfig
@@ -15,6 +22,7 @@ from tour_de_france.ui.screens.route_generation_screen import RouteGenerationScr
 from tour_de_france.ui.screens.setup_screen import SetupScreen
 from tour_de_france.ui.screens.stage_input_screen import StageInputScreen
 from tour_de_france.ui.screens.stage_result_screen import StageResultScreen
+from tour_de_france.ui.widgets.points_table import PointsTablePanel
 
 
 class MainWindow(QMainWindow):
@@ -29,7 +37,21 @@ class MainWindow(QMainWindow):
         self._game_config: GameConfig | None = None
         self._engine = RaceEngine()
         self._stack = QStackedWidget()
-        self.setCentralWidget(self._stack)
+        self._points_table = PointsTablePanel()
+
+        self._points_sidebar = QWidget()
+        sidebar_layout = QVBoxLayout(self._points_sidebar)
+        sidebar_layout.setContentsMargins(0, 18, 16, 18)
+        sidebar_layout.addWidget(self._points_table)
+
+        central = QWidget()
+        central_layout = QHBoxLayout(central)
+        central_layout.setContentsMargins(0, 0, 0, 0)
+        central_layout.setSpacing(0)
+        central_layout.addWidget(self._stack, 3)
+        central_layout.addWidget(self._points_sidebar, 1)
+        self.setCentralWidget(central)
+        self._sync_points_table_width()
 
         self._init_screens()
         self.show_setup()
@@ -49,6 +71,7 @@ class MainWindow(QMainWindow):
 
         self.stage_result_screen = StageResultScreen()
         self.stage_result_screen.next_requested.connect(self._on_stage_result_next)
+        self.stage_result_screen.animation_finished.connect(self._refresh_points_table)
         self._stack.addWidget(self.stage_result_screen)
 
         self.overview_screen = OverviewScreen()
@@ -57,12 +80,28 @@ class MainWindow(QMainWindow):
 
         self.finale_screen = FinaleScreen()
         self.finale_screen.restart_requested.connect(self._reset_to_setup)
+        self.finale_screen.animation_finished.connect(self._refresh_points_table)
         self._stack.addWidget(self.finale_screen)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 - Qt naming
+        super().resizeEvent(event)
+        self._sync_points_table_width()
+
+    def _sync_points_table_width(self) -> None:
+        """Keep the points table at one quarter of the window width."""
+        self._points_sidebar.setFixedWidth(max(240, self.width() // 4))
+
+    def _refresh_points_table(self) -> None:
+        if not self._engine.has_active_race:
+            self._points_table.clear()
+            return
+        self._points_table.set_standings(self._engine.get_standings())
 
     def _on_setup_submitted(self, config: GameConfig) -> None:
         self._game_config = config
         stages = self._engine.start_race(config)
         self.route_generation_screen.start_animation(stages)
+        self._refresh_points_table()
         self.show_route_generation()
 
     def _show_current_stage_input(self) -> None:
@@ -106,22 +145,27 @@ class MainWindow(QMainWindow):
     def _reset_to_setup(self) -> None:
         self._engine.reset()
         self._game_config = None
+        self._points_table.clear()
         self.show_setup()
 
+    def _show_screen(self, widget, show_points_table: bool = True) -> None:
+        self._stack.setCurrentWidget(widget)
+        self._points_sidebar.setVisible(show_points_table)
+
     def show_setup(self) -> None:
-        self._stack.setCurrentWidget(self.setup_screen)
+        self._show_screen(self.setup_screen, show_points_table=False)
 
     def show_route_generation(self) -> None:
-        self._stack.setCurrentWidget(self.route_generation_screen)
+        self._show_screen(self.route_generation_screen)
 
     def show_stage_input(self) -> None:
-        self._stack.setCurrentWidget(self.stage_input_screen)
+        self._show_screen(self.stage_input_screen)
 
     def show_stage_result(self) -> None:
-        self._stack.setCurrentWidget(self.stage_result_screen)
+        self._show_screen(self.stage_result_screen)
 
     def show_overview(self) -> None:
-        self._stack.setCurrentWidget(self.overview_screen)
+        self._show_screen(self.overview_screen)
 
     def show_finale(self) -> None:
-        self._stack.setCurrentWidget(self.finale_screen)
+        self._show_screen(self.finale_screen)

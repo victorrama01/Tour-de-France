@@ -77,6 +77,7 @@ class FinaleScreen(QWidget):
     """Shows final race animation and winner."""
 
     restart_requested = Signal()
+    animation_finished = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -217,6 +218,7 @@ class FinaleScreen(QWidget):
             self._timer.stop()
             self._show_final_ranking()
             self._restart_button.setEnabled(True)
+            self.animation_finished.emit()
 
     def _show_final_ranking(self) -> None:
         if self._result is None:

@@ -88,6 +88,7 @@ class StageResultScreen(QWidget):
     """Displays stage target and animated team distances."""
 
     next_requested = Signal()
+    animation_finished = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -240,6 +241,7 @@ class StageResultScreen(QWidget):
             self._timer.stop()
             self._show_ranking()
             self._next_button.setEnabled(True)
+            self.animation_finished.emit()
 
     def _show_ranking(self) -> None:
         if self._result is None:

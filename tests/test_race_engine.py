@@ -59,6 +59,40 @@ class RaceEngineTests(unittest.TestCase):
         self.assertEqual(by_name["Hold 3"].bonus_points, 3)
         self.assertEqual(by_name["Hold 4"].bonus_points, 0)
 
+    def test_standings_share_placement_on_equal_points(self) -> None:
+        engine = RaceEngine(rng=random.Random(4))
+        stages = engine.start_race(self._config(3))
+        target = stages[0].length
+
+        standings = engine.get_standings()
+        self.assertEqual(standings.completed_stage_count, 0)
+        self.assertEqual([team.rank for team in standings.teams], [1, 1, 1])
+
+        engine.run_stage(
+            [
+                TeamStageInput(team_index=0, start_weight=target, end_weight=0),
+                TeamStageInput(team_index=1, start_weight=target, end_weight=0),
+                TeamStageInput(team_index=2, start_weight=max(0, target - 5), end_weight=0),
+            ]
+        )
+
+        standings = engine.get_standings()
+        self.assertEqual(standings.completed_stage_count, 1)
+        self.assertFalse(standings.is_final)
+        by_name = {team.team_name: team for team in standings.teams}
+        self.assertEqual(by_name["Hold 1"].rank, 1)
+        self.assertEqual(by_name["Hold 2"].rank, 1)
+        self.assertEqual(by_name["Hold 3"].rank, 3)
+        self.assertEqual(by_name["Hold 1"].total_points, 3)
+        self.assertEqual(by_name["Hold 3"].total_points, 1)
+        self.assertEqual([team.rank for team in standings.teams], [1, 1, 3])
+
+        engine.finalize_race()
+        final_standings = engine.get_standings()
+        self.assertTrue(final_standings.is_final)
+        final_by_name = {team.team_name: team for team in final_standings.teams}
+        self.assertEqual(final_by_name["Hold 1"].total_points, 12)
+
     def test_duplicate_or_missing_team_inputs_rejected(self) -> None:
         engine = RaceEngine(rng=random.Random(3))
         engine.start_race(self._config(2))

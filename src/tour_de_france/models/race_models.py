@@ -60,6 +60,29 @@ class StageResult:
 
 
 @dataclass(frozen=True)
+class TeamStanding:
+    """Current standing for one team in the overall competition."""
+
+    team_index: int
+    team_name: str
+    team_color: str
+    total_points: int
+    total_distance: int
+    rank: int
+
+
+@dataclass(frozen=True)
+class StandingsView:
+    """Snapshot of the overall competition used by the points table."""
+
+    completed_stage_count: int
+    stage_count: int
+    target_total_distance: int
+    is_final: bool
+    teams: list[TeamStanding]
+
+
+@dataclass(frozen=True)
 class TeamFinalResult:
     """Final score card for one team."""
 

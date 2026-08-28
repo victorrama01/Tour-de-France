@@ -12,9 +12,11 @@ from tour_de_france.models.race_models import (
     Stage,
     StageInputView,
     StageResult,
+    StandingsView,
     TeamFinalResult,
     TeamStageInput,
     TeamStageResult,
+    TeamStanding,
 )
 
 
@@ -158,6 +160,32 @@ class RaceEngine:
     @property
     def stage_count(self) -> int:
         return len(self._require_state().stages)
+
+    def get_standings(self) -> StandingsView:
+        """Return current points standings, ordered by placement."""
+        state = self._require_state()
+        ranks = self._rank_with_ties(state.total_points, ascending=False)
+
+        teams = [
+            TeamStanding(
+                team_index=idx,
+                team_name=state.config.teams[idx].name,
+                team_color=state.config.teams[idx].color_hex,
+                total_points=state.total_points[idx],
+                total_distance=state.total_distances[idx],
+                rank=ranks[idx],
+            )
+            for idx in range(state.config.team_count)
+        ]
+        teams.sort(key=lambda entry: (entry.rank, entry.team_index))
+
+        return StandingsView(
+            completed_stage_count=len(state.stage_history),
+            stage_count=len(state.stages),
+            target_total_distance=self.total_target_distance,
+            is_final=state.bonus_applied,
+            teams=teams,
+        )
 
     def finalize_race(self) -> FinalResult:
         state = self._require_state()
